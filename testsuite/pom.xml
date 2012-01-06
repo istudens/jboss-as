@@ -127,6 +127,7 @@
         <ds.db></ds.db>
         <ds.jdbc.driver></ds.jdbc.driver>
         <ds.jdbc.driver.version></ds.jdbc.driver.version>
+        <ds.jdbc.xadatasource></ds.jdbc.xadatasource>
         <ds.jdbc.url></ds.jdbc.url>
         <ds.jdbc.user>test</ds.jdbc.user>
         <ds.jdbc.pass>test</ds.jdbc.pass>
@@ -829,8 +830,47 @@
                 <ds.db>mysql</ds.db>
                 <ds.jdbc.driver>com.mysql.jdbc.Driver</ds.jdbc.driver>
                 <ds.jdbc.driver-xa>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</ds.jdbc.driver-xa>
+                <ds.jdbc.xadatasource>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</ds.jdbc.xadatasource>
                 <ds.jdbc.url>jdbc:mysql://localhost:3306/test</ds.jdbc.url>
                 <ds.jdbc.driver.version>5.1.17</ds.jdbc.driver.version>
+            </properties>
+        </profile>
+
+        <!-- PostgreSQL 8.4 -->
+        <profile>
+            <!-- specific profile for database changes  -->
+            <id>postgresql84.profile</id>
+            <activation>
+                <property>
+                    <name>ds</name>
+                    <value>postgresql84</value>
+                </property>
+            </activation>
+            <properties>
+                <ds.db>postgresql</ds.db>
+                <ds.jdbc.driver>org.postgresql.Driver</ds.jdbc.driver>
+                <ds.jdbc.xadatasource>org.postgresql.xa.PGXADataSource</ds.jdbc.xadatasource>
+                <ds.jdbc.url>jdbc:postgresql://localhost:5432/test</ds.jdbc.url>
+                <ds.jdbc.driver.version>8.4.702</ds.jdbc.driver.version>
+            </properties>
+        </profile>
+
+        <!-- Oracle 11g R2 -->
+        <profile>
+            <!-- specific profile for database changes  -->
+            <id>oracle11r2.profile</id>
+            <activation>
+                <property>
+                    <name>ds</name>
+                    <value>oracle11r2</value>
+                </property>
+            </activation>
+            <properties>
+                <ds.db>oracle</ds.db>
+                <ds.jdbc.driver>oracle.jdbc.OracleDriver</ds.jdbc.driver>
+                <ds.jdbc.xadatasource>oracle.jdbc.xa.client.OracleXADataSource</ds.jdbc.xadatasource>
+                <ds.jdbc.url>jdbc:oracle:thin:@localhost:1521:test</ds.jdbc.url>
+                <ds.jdbc.driver.version>11.2.0.2.0</ds.jdbc.driver.version>
             </properties>
         </profile>
 

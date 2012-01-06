@@ -138,6 +138,15 @@
             </modules>
         </profile>
 
+        <!-- -Dts.jbossts -->
+        <profile>
+            <id>ts.integ.group.jbossts</id>
+            <activation><property><name>ts.jbossts</name></property></activation>
+            <modules>
+                <module>jbossts</module>
+            </modules>
+        </profile>
+
     </profiles>
 
 

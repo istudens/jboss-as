@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.jboss.as</groupId>
+        <artifactId>jboss-as-ts-integ</artifactId>
+        <version>7.1.2.Final-SNAPSHOT</version>
+    </parent>
+
+    <!-- ********************************************************************************** -->
+    <!-- ******************************** JBossTS Integration ***************************** -->
+    <!-- ********************************************************************************** -->
+    <groupId>org.jboss.as</groupId>
+    <artifactId>jboss-as-ts-integ-jbossts</artifactId>
+    <version>7.1.2.Final-SNAPSHOT</version>
+
+    <name>JBoss Application Server Test Suite: Integration - JBossTS tests</name>
+
+    <properties>
+        <jbossas.ts.integ.dir>${basedir}/..</jbossas.ts.integ.dir>
+        <jbossas.ts.dir>${jbossas.ts.integ.dir}/..</jbossas.ts.dir>
+        <jbossas.project.dir>${jbossas.ts.dir}/..</jbossas.project.dir>
+
+        <ds.second.jdbc.url></ds.second.jdbc.url>
+        <jbossts.jts>false</jbossts.jts>
+        <jbossts.store.type>StateManager/BasicAction/TwoPhaseCoordinator/AtomicAction</jbossts.store.type>
+        <jbossts.credentials>cr1</jbossts.credentials>
+    </properties>
+
+    <profiles>
+
+        <profile>
+            <id>jbossts.integration.tests.profile</id>
+            <activation>
+                <property>
+                    <name>!ts.noJBossTS</name>
+                </property>
+            </activation>
+
+            <properties>
+                <version.byteman>2.0.0</version.byteman>
+                <byteman.home>${project.build.directory}/byteman</byteman.home>
+                <byteman.server.jvm.args>
+                    -Dorg.jboss.byteman.debug=true -Dorg.jboss.byteman.verbose=true -Dorg.jboss.byteman.contrib.dtest.rmiregistry.port=1199
+                    -Djboss.modules.system.pkgs=org.jboss.byteman
+                    -javaagent:${byteman.home}/byteman.jar=port:9091,listener:true,sys:${byteman.home}/byteman-dtest.jar
+                </byteman.server.jvm.args>
+            </properties>
+
+            <dependencies>
+                <dependency>
+                    <groupId>org.jboss.byteman</groupId>
+                    <artifactId>byteman</artifactId>
+                    <version>${version.byteman}</version>
+                    <scope>test</scope>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.jboss.byteman</groupId>
+                    <artifactId>byteman-dtest</artifactId>
+                    <version>${version.byteman}</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+
+            <!--
+                Server configuration executions.
+            -->
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>jbossts-byteman.copy</id>
+                                <phase>process-test-resources</phase>
+                                <goals>
+                                    <goal>copy</goal>
+                                </goals>
+                                <configuration>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>org.jboss.byteman</groupId>
+                                            <artifactId>byteman</artifactId>
+                                            <version>${version.byteman}</version>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>org.jboss.byteman</groupId>
+                                            <artifactId>byteman-dtest</artifactId>
+                                            <version>${version.byteman}</version>
+                                        </artifactItem>
+                                    </artifactItems>
+                                    <outputDirectory>${byteman.home}</outputDirectory>
+                                    <stripVersion>true</stripVersion>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <executions combine.children="append">
+                            <execution>
+                                <id>build-jbossts.server</id>
+                                <phase>process-test-resources</phase>
+                                <goals><goal>run</goal></goals>
+                                <configuration>
+                                    <target>
+                                        <!-- Build the JBossTS servers. -->
+                                        <ant antfile="${jbossas.ts.integ.dir}/src/test/scripts/jbossts-build.xml">
+                                            <property name="node0" value="${node0}"/> <!-- inheritAll="true" doesn't work. -->
+                                            <property name="node1" value="${node1}"/>
+                                            <property name="jbossts.jts" value="${jbossts.jts}"/>
+                                            <target name="build-jbossts"/>
+                                        </ant>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!--
+                       Surefire test executions
+                    -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <executions combine.children="append">
+
+                            <!-- Disable default-test execution. -->
+                            <execution>
+                                <id>default-test</id>
+                                <goals><goal>test</goal></goals>
+                                <phase>none</phase>
+                            </execution>
+                            <!-- JBossTS tests. -->
+                            <execution>
+                                <id>tests-jbossts.surefire</id>
+                                <phase>test</phase>
+                                <goals><goal>test</goal></goals>
+                                <configuration>
+                                    <!-- Tests to execute. -->
+                                    <includes>
+                                        <include>org/jboss/as/test/jbossts/**/*TestCase.java</include>
+                                    </includes>
+
+                                    <!-- Parameters to test cases. -->
+                                    <systemPropertyVariables>
+                                        <arquillian.launch>jbossts</arquillian.launch>
+                                        <jboss.server.config.file.name>standalone-full.xml</jboss.server.config.file.name>
+                                        <byteman.server.jvm.args>${byteman.server.jvm.args}</byteman.server.jvm.args>
+                                        <jbossts.store.type>${jbossts.store.type}</jbossts.store.type>
+                                        <jbossts.credentials>${jbossts.credentials}</jbossts.credentials>
+                                        <jbossts.wipeout.txs>false</jbossts.wipeout.txs>
+                                        <!-- database properties -->
+                                        <ds.db>${ds.db}</ds.db>
+                                        <ds.jdbc.driver>${ds.jdbc.driver}</ds.jdbc.driver>
+                                        <ds.jdbc.driver.version>${ds.jdbc.driver.version}</ds.jdbc.driver.version>
+                                        <ds.jdbc.xadatasource>${ds.jdbc.xadatasource}</ds.jdbc.xadatasource>
+                                        <ds.jdbc.url>${ds.jdbc.url}</ds.jdbc.url>
+                                        <ds.second.jdbc.url>${ds.second.jdbc.url}</ds.second.jdbc.url>
+                                        <ds.jdbc.driver.jar>${ds.jdbc.driver.jar}</ds.jdbc.driver.jar>
+                                    </systemPropertyVariables>
+                                </configuration>
+                            </execution>
+
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>jbossts.credentials.cr2.profile</id>
+            <activation>
+                <property>
+                    <name>jbossts.credentials</name>
+                    <value>cr2</value>
+                </property>
+            </activation>
+            <properties>
+                <jbossts.credentials>cr2</jbossts.credentials>
+            </properties>
+        </profile>
+        <profile>
+            <id>jbossts.credentials.cr3.profile</id>
+            <activation>
+                <property>
+                    <name>jbossts.credentials</name>
+                    <value>cr3</value>
+                </property>
+            </activation>
+            <properties>
+                <jbossts.credentials>cr3</jbossts.credentials>
+            </properties>
+        </profile>
+        <profile>
+            <id>jbossts.credentials.cr4.profile</id>
+            <activation>
+                <property>
+                    <name>jbossts.credentials</name>
+                    <value>cr4</value>
+                </property>
+            </activation>
+            <properties>
+                <jbossts.credentials>cr4</jbossts.credentials>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>jbossts.jts.profile</id>
+            <activation>
+                <property>
+                    <name>jbossts.jts</name>
+                </property>
+            </activation>
+            <properties>
+                <jbossts.jts>true</jbossts.jts>
+                <jbossts.store.type>StateManager/BasicAction/TwoPhaseCoordinator/ArjunaTransactionImple</jbossts.store.type>
+            </properties>
+        </profile>
+
+        <profile>
+            <!-- specific profile for database changes  -->
+            <id>oraclerac.profile</id>
+            <activation>
+                <property>
+                    <name>ds</name>
+                    <value>oraclerac</value>
+                </property>
+            </activation>
+            <properties>
+                <ds.db>oracle</ds.db>
+                <ds.jdbc.driver>oracle.jdbc.OracleDriver</ds.jdbc.driver>
+                <ds.jdbc.xadatasource>oracle.jdbc.xa.client.OracleXADataSource</ds.jdbc.xadatasource>
+                <ds.jdbc.url>jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=test)))</ds.jdbc.url>
+                <ds.second.jdbc.url>jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=test)))</ds.second.jdbc.url>
+                <ds.jdbc.driver.version>11.1.0.7.0</ds.jdbc.driver.version>
+            </properties>
+        </profile>
+
+    </profiles>
+</project>
