@@ -116,6 +116,7 @@
                                             <property name="node0" value="${node0}"/> <!-- inheritAll="true" doesn't work. -->
                                             <property name="node1" value="${node1}"/>
                                             <property name="jbossts.jts" value="${jbossts.jts}"/>
+                                            <property name="jbossts.hqobjectstore" value="${jbossts.hqobjectstore}"/>
                                             <target name="build-jbossts"/>
                                         </ant>
                                     </target>
@@ -151,6 +152,7 @@
 
                                     <!-- Parameters to test cases. -->
                                     <systemPropertyVariables>
+                                        <!-- FIXME add 'jts' suffix to test reports if jbossts.jts -->
                                         <arquillian.launch>jbossts</arquillian.launch>
                                         <jboss.server.config.file.name>standalone-full.xml</jboss.server.config.file.name>
                                         <byteman.server.jvm.args>${byteman.server.jvm.args}</byteman.server.jvm.args>
@@ -222,6 +224,18 @@
             <properties>
                 <jbossts.jts>true</jbossts.jts>
                 <jbossts.store.type>StateManager/BasicAction/TwoPhaseCoordinator/ArjunaTransactionImple</jbossts.store.type>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>jbossts.hqobjectstore.profile</id>
+            <activation>
+                <property>
+                    <name>jbossts.hqobjectstore</name>
+                </property>
+            </activation>
+            <properties>
+                <jbossts.hqobjectstore>true</jbossts.hqobjectstore>
             </properties>
         </profile>
 

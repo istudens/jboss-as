@@ -226,12 +226,16 @@ public abstract class CrashRecoveryTestBase {
         checkAfterTestExecution(testName, false);
     }
 
+    /**
+     * Halts server at prepare phase on TestXAResource after the prepare was invoked on JPA/JMS XA resource.
+     * @throws Throwable
+     */
     @Test
     public void prepareHalt() throws Throwable {
         String testName = "prepare_halt";
 
         instrumentor.injectOnCall(CrashBeanCommon.class, "afterEntityUpdate", "$0.enlistSynchronization(1), $0.enlistXAResource(1)");
-        instrumentor.crashAtMethodExit(TestXAResource.class, "prepare");
+        instrumentor.crashAtMethodEntry(TestXAResource.class, "prepare");
 
         initBeforeTestExecution(testName);
 
@@ -253,7 +257,7 @@ public abstract class CrashRecoveryTestBase {
 
         instrumentedTestXAResource.assertKnownInstances(1);
         instrumentedTestXAResource.assertMethodCalled("recover");
-        instrumentedTestXAResource.assertMethodCalled("rollback");
+        instrumentedTestXAResource.assertMethodNotCalled("rollback");
         instrumentedTestXAResource.assertMethodNotCalled("commit");
 
         checkAfterTestExecution(testName, true);
@@ -266,48 +270,15 @@ public abstract class CrashRecoveryTestBase {
         assertEquals("There are still some un-recovered txs in the database after crash recovery.", indoubtXidsBeforeTest.size(), checkXidsInDoubt().size());
     }
 
+    /**
+     * Halts server at commit phase on TestXAResource after commit was invoked on JPA/JMS XA resource.
+     * This scenario is not fully supported yet.
+     * It requires to set -DJTAEnvironmentBean.xaAssumeRecoveryComplete=true to pass, but it helps only on JTA, not JTS.
+     * For more details see JBTM-860.
+     * @throws Throwable
+     */
     @Test
-    public void prepareHaltRev() throws Throwable {
-        String testName = "prepare_halt_rev";
-
-        instrumentor.injectOnCall(CrashBeanCommon.class, "beforeEntityUpdate", "$0.enlistSynchronization(1), $0.enlistXAResource(1)");
-        instrumentor.crashAtMethodExit(TestXAResource.class, "prepare");
-
-        initBeforeTestExecution(testName);
-
-        execute(testName, true);
-
-        instrumentedTestSynchronization.assertKnownInstances(1);
-        instrumentedTestSynchronization.assertMethodCalled("beforeCompletion");
-        instrumentedTestSynchronization.assertMethodNotCalled("afterCompletion");
-
-        instrumentedTestXAResource.assertKnownInstances(1);
-        instrumentedTestXAResource.assertMethodCalled("prepare");
-        instrumentedTestXAResource.assertMethodNotCalled("rollback");
-        instrumentedTestXAResource.assertMethodNotCalled("commit");
-
-        rebootServer(controller);
-
-        doRecovery();
-        doRecovery();
-
-        instrumentedTestXAResource.assertKnownInstances(1);
-        instrumentedTestXAResource.assertMethodCalled("recover");
-        instrumentedTestXAResource.assertMethodCalled("rollback");
-        instrumentedTestXAResource.assertMethodNotCalled("commit");
-
-        checkAfterTestExecution(testName, true);
-
-        // check the tx log state
-        int pendingUids = getPendingUids(store);
-        assertTrue("object store error", pendingUids != -1);
-        assertTrue("recovery failed, some uids still left in the tx log", pendingUids <= uidsBeforeTest);
-
-        // check the in-doubt txs on the database side
-        assertEquals("some in-doubt txs still left in the database", indoubtXidsBeforeTest.size(), checkXidsInDoubt().size());
-    }
-
-    @Test
+//    @Ignore("JBTM-860")
     public void commitHalt() throws Throwable {
         String testName = "commit_halt";
 
@@ -348,6 +319,10 @@ public abstract class CrashRecoveryTestBase {
         assertEquals("some in-doubt txs still left in the database", indoubtXidsBeforeTest.size(), checkXidsInDoubt().size());
     }
 
+    /**
+     * Halts server at commit phase on TestXAResource before commit was done on JPA/JMS XA resource.
+     * @throws Throwable
+     */
     @Test
     public void commitHaltRev() throws Throwable {
         String testName = "commit_halt_rev";

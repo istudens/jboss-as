@@ -359,4 +359,41 @@
     </macrodef>
 
 
+    <!--
+        Enable HornetQ journal based object store of JBossTS.
+        This macro makes use of saxon via  ${net.sf.saxon:saxon:jar}.
+    -->
+    <macrodef name="ts.config-as.add-hq-object-store" description="Enable HornetQ journal base object store of JBossTS">
+
+        <attribute name="name" default="jbossas"/>
+        <attribute name="output.dir" default="${project.build.directory}"/>
+        <attribute name="config.dir.name" default="standalone/configuration"/>
+
+        <sequential>
+            <echo message="Enabling HornetQ journal based object store for config @{name}"/>
+
+            <!-- Process *.xml to *.xml.mod. -->
+            <xslt destdir="@{output.dir}/@{name}/@{config.dir.name}"
+                  style="${jbossas.ts.integ.dir}/src/test/xslt/enableHQObjectStore.xsl"
+                  extension=".xml.mod"
+                  useImplicitFileset="false">
+                <fileset dir="@{output.dir}/@{name}/@{config.dir.name}">
+                    <include name="**/standalone-ha.xml"/>
+                    <include name="**/standalone.xml"/>
+                    <include name="**/standalone-full.xml"/>
+                </fileset>
+            </xslt>
+
+            <!-- Move processed files back. -->
+            <move todir="@{output.dir}/@{name}/@{config.dir.name}">
+               <fileset dir="@{output.dir}/@{name}/@{config.dir.name}">
+                   <include name="**/standalone-ha.xml.mod"/>
+                   <include name="**/standalone.xml.mod"/>
+                   <include name="**/standalone-full.xml.mod"/>
+               </fileset>
+               <mapper type="glob" from="*.mod" to="*"/>
+             </move>
+        </sequential>
+    </macrodef>
+
 </project>
