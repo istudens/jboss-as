@@ -278,7 +278,7 @@ public abstract class CrashRecoveryTestBase {
      * @throws Throwable
      */
     @Test
-//    @Ignore("JBTM-860")
+    @Ignore("JBTM-860")
     public void commitHalt() throws Throwable {
         String testName = "commit_halt";
 
