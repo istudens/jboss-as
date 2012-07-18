@@ -23,11 +23,13 @@ package org.jboss.as.testsuite.integration.tm.transactionmanager;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.logging.Logger;
 import org.jboss.shrinkwrap.api.ArchivePaths;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.jboss.util.NestedException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -48,22 +50,14 @@ import javax.transaction.xa.XAResource;
  */
 @RunWith(Arquillian.class)
 public class TransactionManagerUnitTestCase {
-
-    public static final String ARCHIVE_NAME = "tmtest";
-
-    @Inject
-    TMTestBean tmBean;
+    private static final Logger log = Logger.getLogger(TransactionManagerUnitTestCase.class);
 
     @Rule
     public TestName name = new TestName();
 
-    protected void runTest(Operation[] ops) throws Exception {
-        tmBean.testOperations(name.getMethodName(), ops);
-    }
-
     @Deployment
     public static JavaArchive deploy() {
-        return ShrinkWrap.create(JavaArchive.class, ARCHIVE_NAME + ".jar")
+        return ShrinkWrap.create(JavaArchive.class, "tmtest.jar")
                 .addPackage(TransactionManagerUnitTestCase.class.getPackage())
                 .addAsManifestResource(EmptyAsset.INSTANCE, ArchivePaths.create("beans.xml"))
                 .addAsManifestResource(new StringAsset("Dependencies: org.jboss.jboss-transaction-spi,org.jboss.common-core\n"),"MANIFEST.MF");
@@ -551,5 +545,28 @@ public class TransactionManagerUnitTestCase {
                         new Operation(Operation.COMMIT, 1, 0, new RollbackException()),
                         new Operation(Operation.STATE, 1, Resource.FORGOT),
                 });
+    }
+
+    private void runTest(Operation[] ops) throws Exception {
+        testOperations(name.getMethodName(), ops);
+    }
+
+    private void testOperations(String test, Operation[] ops) throws Exception {
+        log.info("Starting test " + test);
+        Operation.start(log);
+        int i = 0;
+        try {
+            for (; i < ops.length; ++i)
+                ops[i].perform();
+        } catch (Exception e) {
+            throw new NestedException(test + " operation " + i, e);
+        } finally {
+            log.info("Finished test " + test);
+            try {
+                Operation.end();
+            } finally {
+                Operation.tidyUp();
+            }
+        }
     }
 }
