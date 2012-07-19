@@ -21,6 +21,7 @@
  */
 package org.jboss.as.test.integration.ejb.transaction.bmt;
 
+import org.jboss.as.test.shared.TimeoutUtil;
 import org.junit.Assert;
 
 import javax.annotation.Resource;
@@ -31,6 +32,7 @@ import javax.ejb.TransactionManagementType;
 import javax.transaction.NotSupportedException;
 import javax.transaction.Status;
 import javax.transaction.SystemException;
+import javax.transaction.UserTransaction;
 
 /**
  *
@@ -51,6 +53,22 @@ public class BMTStateless {
         try {
             Assert.assertEquals(Status.STATUS_NO_TRANSACTION, ejbContext.getUserTransaction().getStatus());
             ejbContext.getUserTransaction().begin();
+        } catch (NotSupportedException e) {
+            throw new RuntimeException(e);
+        } catch (SystemException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void leakTransactionByTimeout() {
+        try {
+            UserTransaction ut = ejbContext.getUserTransaction();
+            Assert.assertEquals(Status.STATUS_NO_TRANSACTION, ut.getStatus());
+            ut.setTransactionTimeout(2);
+            ut.begin();
+            Thread.sleep(TimeoutUtil.adjust(3000));
+        } catch (InterruptedException e) {
+            // ignore
         } catch (NotSupportedException e) {
             throw new RuntimeException(e);
         } catch (SystemException e) {

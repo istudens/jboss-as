@@ -78,6 +78,11 @@ public class BeanManagedTransactionsTestCase {
     }
 
     @Test(expected = EJBException.class)
+    public void testStatelessBeanLeaksTransactionsByTimeout() {
+        bmtStateless.leakTransactionByTimeout();
+    }
+
+    @Test(expected = EJBException.class)
     public void testSingletonBeanLeaksTransactions() {
         bmtSingleton.leakTransaction();
     }
