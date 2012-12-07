@@ -41,7 +41,8 @@ final class JVMOptionRemoveHandler implements OperationStepHandler {
     static final JVMOptionRemoveHandler INSTANCE = new JVMOptionRemoveHandler();
 
     static final SimpleAttributeDefinition JVM_OPTION = SimpleAttributeDefinitionBuilder.create(JvmAttributes.JVM_OPTION, ModelType.STRING, false)
-            .setValidator(new StringLengthValidator(1))
+            .setValidator(new StringLengthValidator(1, false, true))
+            .setAllowExpression(true)
             .build();
 
     public static final OperationDefinition DEFINITION = new SimpleOperationDefinitionBuilder(OPERATION_NAME, HostResolver.getResolver("jvm"))

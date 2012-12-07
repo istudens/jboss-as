@@ -441,7 +441,11 @@ public class JvmXml {
                         final Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
                         switch (attribute) {
                             case VALUE: {
-                                option = attrValue;
+                                System.out.println("===== JvmXml#parseJvmOptions() attrValue = " + attrValue);
+                                System.out.println("===== JvmXml#parseJvmOptions() parsePossibleExpression = " + ParseUtils.parsePossibleExpression(attrValue));
+                                System.out.println("===== JvmXml#parseJvmOptions() parsePossibleExpression.asString() = " + ParseUtils.parsePossibleExpression(attrValue).asString());
+                                System.out.println("===== JvmXml#parseJvmOptions() System.getProperty(\"MYSUSPEND\") = " + System.getProperty("MYSUSPEND"));
+                                option = ParseUtils.parsePossibleExpression(attrValue).asString();
                                 break;
                             }
                             default:

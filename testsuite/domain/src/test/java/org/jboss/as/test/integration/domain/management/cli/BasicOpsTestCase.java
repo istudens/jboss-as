@@ -27,6 +27,8 @@ import org.jboss.as.test.integration.management.util.CLIWrapper;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
@@ -37,6 +39,7 @@ import java.util.List;
 public class BasicOpsTestCase {
 
     @Test
+    @Ignore
     public void testConnect() throws Exception {
         CLIWrapper cli = new CLIWrapper(false, DomainTestSupport.masterAddress);
         assertFalse(cli.isConnected());
@@ -46,6 +49,28 @@ public class BasicOpsTestCase {
     }
 
     @Test
+    public void testJVMOpts() throws Exception {
+        CLIWrapper cli = new CLIWrapper(false, DomainTestSupport.masterAddress);
+        assertFalse(cli.isConnected());
+
+        assertTrue(cli.sendConnect(DomainTestSupport.masterAddress));
+        assertTrue(cli.isConnected());
+
+        // check hosts
+//        cli.sendLine("/host=master/system-property=MYSUSPEND:add(value=\"n\")");
+//        CLIOpResult res = cli.readAllAsOpResult();
+
+        cli.sendLine("/host=master/jvm=default:add-jvm-option(jvm-option=\"-Xbb=${MYSUSPEND}\")");
+        CLIOpResult res = cli.readAllAsOpResult();
+
+//        cli.sendLine("/host=master/jvm=default:read-attribute(name=\"jvm-options\")");
+//        res = cli.readAllAsOpResult();
+
+        cli.quit();
+    }
+
+    @Test
+    @Ignore
     public void testDomainSetup() throws Exception {
         CLIWrapper cli = new CLIWrapper(false, DomainTestSupport.masterAddress);
         assertFalse(cli.isConnected());
@@ -70,6 +95,7 @@ public class BasicOpsTestCase {
     }
 
     @Test
+    @Ignore
     public void testWalkLocalHosts() throws Exception {
 
         CLIWrapper cli = new CLIWrapper(true, DomainTestSupport.masterAddress);
@@ -91,6 +117,7 @@ public class BasicOpsTestCase {
     }
 
     @Test
+    @Ignore
     public void testWalkRemoteHosts() throws Exception {
 
         CLIWrapper cli = new CLIWrapper(true, DomainTestSupport.masterAddress);

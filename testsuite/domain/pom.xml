@@ -75,6 +75,8 @@
                         <module.path>${jboss.home}/modules</module.path>
                         <jboss.test.host.master.address>${node0}</jboss.test.host.master.address>
                         <jboss.test.host.slave.address>${node1}</jboss.test.host.slave.address>
+                        <jboss.options>-DMYSUSPEND=n</jboss.options>
+                        <MYSUSPEND>n</MYSUSPEND>
                     </systemPropertyVariables>
                     <includes>
                          <include>org/jboss/as/test/integration/respawn/*TestCase.java</include>

@@ -43,7 +43,8 @@ final class JVMOptionAddHandler implements OperationStepHandler {
     static final JVMOptionAddHandler INSTANCE = new JVMOptionAddHandler();
 
     static final SimpleAttributeDefinition JVM_OPTION = SimpleAttributeDefinitionBuilder.create(JvmAttributes.JVM_OPTION, ModelType.STRING, false)
-            .setValidator(new StringLengthValidator(1))
+            .setValidator(new StringLengthValidator(1, false, true))
+            .setAllowExpression(true)
             .build();
 
     public static final OperationDefinition DEFINITION = new SimpleOperationDefinitionBuilder(OPERATION_NAME, HostResolver.getResolver("jvm"))
@@ -58,6 +59,10 @@ final class JVMOptionAddHandler implements OperationStepHandler {
         final ModelNode model = resource.getModel();
 
         final ModelNode option = JVM_OPTION.validateOperation(operation);
+        System.out.println("===== JVMOptionAddHandler#execute() option = " + option);
+        System.out.println("===== JVMOptionAddHandler#execute() option.asString() = " + option.asString());
+        System.out.println("===== JVMOptionAddHandler#execute() resolved = " + JVM_OPTION.resolveModelAttribute(context, operation).asString());
+        System.out.println("===== JVMOptionAddHandler#execute() System.getProperty(\"MYSUSPEND\") = " + System.getProperty("MYSUSPEND"));
         ModelNode jvmOptions = model.get(JvmAttributes.JVM_OPTIONS);
         if (jvmOptions.isDefined()) {
             for (ModelNode optionNode : jvmOptions.asList()) {

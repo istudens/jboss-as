@@ -99,7 +99,8 @@ public class JvmAttributes {
             .build();
 
     public static final AttributeDefinition OPTIONS = new StringListAttributeDefinition.Builder(JvmAttributes.JVM_OPTIONS)
-            .setValidator(new StringLengthValidator(1, true))
+            .setValidator(new StringLengthValidator(1, true, true))
+            .setAllowExpression(true)
             .setAllowNull(true)
             .setAttributeMarshaller(new AttributeMarshaller() {
                 @Override
