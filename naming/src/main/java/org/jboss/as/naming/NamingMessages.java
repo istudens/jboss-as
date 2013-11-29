@@ -29,6 +29,7 @@ import javax.naming.InvalidNameException;
 import javax.naming.Name;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
+import javax.naming.NoInitialContextException;
 
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.naming.deployment.JndiName;
@@ -486,4 +487,20 @@ public interface NamingMessages {
 
     @Message(id = 11877, value = "Binding type %s can not take a 'cache' attribute")
     OperationFailedException cacheNotValidForBindingType(BindingType type);
+
+    /**
+     * Creates a naming exception indicating that a required environment property is missing.
+     * @param propertyName the environment property name
+     * @return a {@link NoInitialContextException} for the error.
+     */
+    @Message(id = 11878, value = "Missing %s environment property")
+    NoInitialContextException missingEnvironmentProperty(String propertyName);
+
+    /**
+     * Creates a naming exception indicating that a required module of a required {@link InitialContextFactory} cannot be found.
+     * @param moduleName the ICF module name
+     * @return a {@link NoInitialContextException} for the error.
+     */
+    @Message(id = 11879, value = "Could not find a initial context factory module %s")
+    NoInitialContextException couldNotFindICFModule(String moduleName);
 }

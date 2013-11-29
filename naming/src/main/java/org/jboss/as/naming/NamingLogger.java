@@ -123,4 +123,13 @@ public interface NamingLogger extends BasicLogger {
     @Message(id = 11812, value = "Failed to obtain jndi view value for entry %s.")
     void failedToLookupJndiViewValue(String entry, @Cause Throwable cause);
 
+    /**
+     * Logs a warning message indicating the {@code moduleName} failed to load.
+     * @param moduleName the name of the module that failed to load.
+     * @param cause the cause of the error.
+     */
+    @LogMessage(level = WARN)
+    @Message(id = 11813, value = "Failed to load module %s")
+    void failedToLoadModule(String moduleName, @Cause Throwable cause);
+
 }
