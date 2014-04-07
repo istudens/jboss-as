@@ -79,11 +79,10 @@ import org.omg.CORBA.ORB;
 import javax.transaction.TransactionSynchronizationRegistry;
 import javax.transaction.UserTransaction;
 import java.util.List;
+import java.util.Locale;
 
 import static org.jboss.as.txn.TransactionLogger.ROOT_LOGGER;
 import static org.jboss.as.txn.subsystem.CommonAttributes.JTS;
-import static org.jboss.as.txn.subsystem.CommonAttributes.USEHORNETQSTORE;
-import static org.jboss.as.txn.subsystem.CommonAttributes.USE_JDBC_STORE;
 
 
 /**
@@ -114,9 +113,9 @@ class TransactionSubsystemAdd extends AbstractBoottimeAddStepHandler {
 
         TransactionSubsystemRootResourceDefinition.JTS.validateAndSet(operation, model);
 
-        TransactionSubsystemRootResourceDefinition.USEHORNETQSTORE.validateAndSet(operation, model);
-
         for (AttributeDefinition ad : TransactionSubsystemRootResourceDefinition.attributes_1_2) {
+            if (TransactionSubsystemRootResourceDefinition.USE_JDBC_STORE.getName().equals(ad.getName()))
+                continue;
             ad.validateAndSet(operation, model);
         }
 
@@ -124,10 +123,24 @@ class TransactionSubsystemAdd extends AbstractBoottimeAddStepHandler {
     }
 
     private void populateModelWithObjectStoreConfig(ModelNode operation, ModelNode objectStoreModel) throws OperationFailedException {
-
         TransactionSubsystemRootResourceDefinition.OBJECT_STORE_RELATIVE_TO.validateAndSet(operation, objectStoreModel);
         TransactionSubsystemRootResourceDefinition.OBJECT_STORE_PATH.validateAndSet(operation, objectStoreModel);
 
+        TransactionSubsystemRootResourceDefinition.OBJECT_STORE_TYPE.validateAndSet(operation, objectStoreModel);
+        TransactionSubsystemRootResourceDefinition.USEHORNETQSTORE.validateAndSet(operation, objectStoreModel);
+        TransactionSubsystemRootResourceDefinition.USE_JDBC_STORE.validateAndSet(operation, objectStoreModel);
+
+        ModelNode useHornetqStore = objectStoreModel.get(TransactionSubsystemRootResourceDefinition.USEHORNETQSTORE.getName());
+        ModelNode useJdbcStore = objectStoreModel.get(TransactionSubsystemRootResourceDefinition.USE_JDBC_STORE.getName());
+        ModelNode objectStoreType = objectStoreModel.get(TransactionSubsystemRootResourceDefinition.OBJECT_STORE_TYPE.getName());
+        if (!objectStoreType.isDefined()) {
+            if (useHornetqStore.isDefined() && useHornetqStore.asBoolean())
+                objectStoreType.set(new ModelNode(ObjectStoreType.HORNETQ.toString()));
+            if (useJdbcStore.isDefined() && useJdbcStore.asBoolean())
+                objectStoreType.set(new ModelNode(ObjectStoreType.JDBC.toString()));
+        }
+        useHornetqStore.set(new ModelNode());
+        useJdbcStore.set(new ModelNode());
     }
 
     private void populateModelWithCoordinatorEnvConfig(ModelNode operation, ModelNode coordEnvModel) throws OperationFailedException {
@@ -293,12 +306,13 @@ class TransactionSubsystemAdd extends AbstractBoottimeAddStepHandler {
     private void performObjectStoreBoottime(OperationContext context, ModelNode model,
                                             ServiceVerificationHandler verificationHandler,
                                             List<ServiceController<?>> controllers) throws OperationFailedException {
-        boolean useHornetqJournalStore = model.hasDefined(USEHORNETQSTORE) && model.get(USEHORNETQSTORE).asBoolean();
+        ObjectStoreType storeType = (model.hasDefined(CommonAttributes.OBJECT_STORE_TYPE))
+                ? ObjectStoreType.valueOf(model.get(CommonAttributes.OBJECT_STORE_TYPE).asString().toUpperCase(Locale.ENGLISH))
+                : ObjectStoreType.defaultValue();
         final boolean enableAsyncIO = TransactionSubsystemRootResourceDefinition.HORNETQ_STORE_ENABLE_ASYNC_IO.resolveModelAttribute(context, model).asBoolean();
         final String objectStorePathRef = TransactionSubsystemRootResourceDefinition.OBJECT_STORE_RELATIVE_TO.resolveModelAttribute(context, model).asString();
         final String objectStorePath = TransactionSubsystemRootResourceDefinition.OBJECT_STORE_PATH.resolveModelAttribute(context, model).asString();
 
-        final boolean useJdbcStore = model.hasDefined(USE_JDBC_STORE) && model.get(USE_JDBC_STORE).asBoolean();
         final String dataSourceJndiName = TransactionSubsystemRootResourceDefinition.JDBC_STORE_DATASOURCE.resolveModelAttribute(context, model).asString();
 
         ArjunaObjectStoreEnvironmentService.JdbcStoreConfigBulder confiBuilder = new ArjunaObjectStoreEnvironmentService.JdbcStoreConfigBulder();
@@ -320,11 +334,11 @@ class TransactionSubsystemAdd extends AbstractBoottimeAddStepHandler {
 
         ServiceTarget target = context.getServiceTarget();
         // Configure the ObjectStoreEnvironmentBeans
-        final ArjunaObjectStoreEnvironmentService objStoreEnvironmentService = new ArjunaObjectStoreEnvironmentService(useHornetqJournalStore, enableAsyncIO, objectStorePath, objectStorePathRef, useJdbcStore, dataSourceJndiName, confiBuilder.build());
+        final ArjunaObjectStoreEnvironmentService objStoreEnvironmentService = new ArjunaObjectStoreEnvironmentService(storeType, enableAsyncIO, objectStorePath, objectStorePathRef, dataSourceJndiName, confiBuilder.build());
         ServiceBuilder<Void> builder = target.addService(TxnServices.JBOSS_TXN_ARJUNA_OBJECTSTORE_ENVIRONMENT, objStoreEnvironmentService)
                 .addDependency(PathManagerService.SERVICE_NAME, PathManager.class, objStoreEnvironmentService.getPathManagerInjector())
                 .addDependency(TxnServices.JBOSS_TXN_CORE_ENVIRONMENT);
-        if (useJdbcStore) {
+        if (storeType == ObjectStoreType.JDBC) {
             final ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(dataSourceJndiName);
             builder.addDependency(bindInfo.getBinderServiceName());
         }

@@ -1,4 +1,4 @@
-<subsystem xmlns="urn:jboss:domain:transactions:2.0">
+<subsystem xmlns="urn:jboss:domain:transactions:2.1">
     <core-environment node-identifier="1" path="var" relative-to="jboss.server.data.dir">
         <process-id>
             <socket socket-binding="txn-socket-id" socket-process-id-max-ports="10"/>
@@ -8,7 +8,7 @@
                           recovery-listener="false"/>
     <coordinator-environment statistics-enabled="true" enable-tsm-status="true"
                              default-timeout="300"/>
-    <object-store path="tx-object-store" relative-to="jboss.server.data.dir"/>
+    <object-store type="hornetq" path="tx-object-store" relative-to="jboss.server.data.dir"/>
     <jts/>
-    <use-hornetq-store enable-async-io="true"/>
+    <hornetq-store enable-async-io="true"/>
 </subsystem>

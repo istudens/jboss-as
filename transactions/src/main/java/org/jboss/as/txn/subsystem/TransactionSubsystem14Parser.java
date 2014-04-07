@@ -55,7 +55,7 @@ class TransactionSubsystem14Parser implements XMLStreamConstants, XMLElementRead
     public static final TransactionSubsystem14Parser INSTANCE = new TransactionSubsystem14Parser(Namespace.TRANSACTIONS_1_4);
 
     private final Namespace validNamespace;
-    TransactionSubsystem14Parser(Namespace validNamespace) {
+    TransactionSubsystem14Parser(final Namespace validNamespace) {
         this.validNamespace = validNamespace;
     }
 

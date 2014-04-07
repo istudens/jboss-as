@@ -26,6 +26,7 @@
 package org.jboss.as.txn.service;
 
 import org.jboss.as.controller.services.path.PathManager;
+import org.jboss.as.txn.subsystem.ObjectStoreType;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
@@ -44,23 +45,22 @@ import com.arjuna.common.internal.util.propertyservice.BeanPopulator;
 public class ArjunaObjectStoreEnvironmentService implements Service<Void> {
 
     private final InjectedValue<PathManager> pathManagerInjector = new InjectedValue<PathManager>();
-    private final boolean useHornetqJournalStore;
     private final boolean enableAsyncIO;
     private final String path;
     private final String pathRef;
 
-    private final boolean useJdbcStore;
     private final String dataSourceJndiName;
     private final JdbcStoreConfig jdbcSoreConfig;
 
+    private final ObjectStoreType storeType;
+
     private volatile PathManager.Callback.Handle callbackHandle;
 
-    public ArjunaObjectStoreEnvironmentService(final boolean useHornetqJournalStore, final boolean enableAsyncIO, final String path, final String pathRef, final boolean useJdbcStore, final String dataSourceJndiName, final JdbcStoreConfig jdbcSoreConfig) {
-        this.useHornetqJournalStore = useHornetqJournalStore;
+    public ArjunaObjectStoreEnvironmentService(final ObjectStoreType storeType, final boolean enableAsyncIO, final String path, final String pathRef, final String dataSourceJndiName, final JdbcStoreConfig jdbcSoreConfig) {
+        this.storeType = storeType;
         this.enableAsyncIO = enableAsyncIO;
         this.path = path;
         this.pathRef = pathRef;
-        this.useJdbcStore = useJdbcStore;
         this.dataSourceJndiName = dataSourceJndiName;
         this.jdbcSoreConfig = jdbcSoreConfig;
     }
@@ -79,7 +79,7 @@ public class ArjunaObjectStoreEnvironmentService implements Service<Void> {
            BeanPopulator.getNamedInstance(ObjectStoreEnvironmentBean.class, "default");
 
 
-        if(useHornetqJournalStore) {
+        if(storeType == ObjectStoreType.HORNETQ) {
             HornetqJournalEnvironmentBean hornetqJournalEnvironmentBean = BeanPopulator.getDefaultInstance(
                     com.arjuna.ats.internal.arjuna.objectstore.hornetq.HornetqJournalEnvironmentBean.class
             );
@@ -99,7 +99,7 @@ public class ArjunaObjectStoreEnvironmentService implements Service<Void> {
             BeanPopulator.getNamedInstance(ObjectStoreEnvironmentBean.class, "communicationStore");
         communicationStoreObjectStoreEnvironmentBean.setObjectStoreDir(objectStoreDir);
 
-        if(useJdbcStore) {
+        if(storeType == ObjectStoreType.JDBC) {
             defaultActionStoreObjectStoreEnvironmentBean.setObjectStoreType("com.arjuna.ats.internal.arjuna.objectstore.jdbc.JDBCStore");
             stateStoreObjectStoreEnvironmentBean.setObjectStoreType("com.arjuna.ats.internal.arjuna.objectstore.jdbc.JDBCStore");
             communicationStoreObjectStoreEnvironmentBean.setObjectStoreType("com.arjuna.ats.internal.arjuna.objectstore.jdbc.JDBCStore");

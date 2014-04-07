@@ -35,7 +35,7 @@ import org.jboss.as.controller.registry.OperationEntry;
  * @author <a href="mailto:tomaz.cerar@redhat.com">Tomaz Cerar</a>
  */
 public class LogStoreDefinition extends SimpleResourceDefinition {
-    static final SimpleAttributeDefinition[] LOG_STORE_ATTRIBUTE = new SimpleAttributeDefinition[]{
+    static final SimpleAttributeDefinition[] LOG_STORE_READ_ONLY_ATTRIBUTES = new SimpleAttributeDefinition[]{
             LogStoreConstants.LOG_STORE_TYPE};
 
 
@@ -62,7 +62,8 @@ public class LogStoreDefinition extends SimpleResourceDefinition {
     @Override
     public void registerAttributes(ManagementResourceRegistration resourceRegistration) {
         super.registerAttributes(resourceRegistration);
-        for (SimpleAttributeDefinition attr : LOG_STORE_ATTRIBUTE) {
+        for (SimpleAttributeDefinition attr : LOG_STORE_READ_ONLY_ATTRIBUTES) {
+//            resourceRegistration.registerReadOnlyAttribute(attr, null);
             resourceRegistration.registerReadWriteAttribute(attr, null, new ReloadRequiredWriteAttributeHandler(attr));
         }
     }

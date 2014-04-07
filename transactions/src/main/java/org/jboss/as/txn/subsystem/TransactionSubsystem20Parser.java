@@ -37,10 +37,10 @@ import org.jboss.staxmapper.XMLExtendedStreamReader;
  */
 class TransactionSubsystem20Parser extends TransactionSubsystem14Parser {
 
-    public static final TransactionSubsystem20Parser INSTANCE = new TransactionSubsystem20Parser();
+    public static final TransactionSubsystem20Parser INSTANCE = new TransactionSubsystem20Parser(Namespace.TRANSACTIONS_2_0);
 
-    private TransactionSubsystem20Parser() {
-        super(Namespace.TRANSACTIONS_2_0);
+    TransactionSubsystem20Parser(final Namespace validNamespace) {
+        super(validNamespace);
     }
 
     protected void parseCoordinatorEnvironmentElement(final XMLExtendedStreamReader reader, final ModelNode operation) throws XMLStreamException {

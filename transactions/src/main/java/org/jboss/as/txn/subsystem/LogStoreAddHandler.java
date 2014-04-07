@@ -45,7 +45,7 @@ class LogStoreAddHandler implements OperationStepHandler {
         // Add the log store resource
         final ModelNode model = resource.getModel();
 
-        for (final SimpleAttributeDefinition attribute : LogStoreDefinition.LOG_STORE_ATTRIBUTE) {
+        for (final SimpleAttributeDefinition attribute : LogStoreDefinition.LOG_STORE_READ_ONLY_ATTRIBUTES) {
             if (operation.get(attribute.getName()).isDefined())  {
                 attribute.validateAndSet(operation, model);
             } else {

@@ -90,6 +90,7 @@ class LogStoreConstants {
             .setAllowNull(true)
             .setDefaultValue(new ModelNode("default"))
             .setMeasurementUnit(MeasurementUnit.NONE)
+//            .setDeprecated(ModelVersion.create(2))
             .build();
 
     static SimpleAttributeDefinition JMX_NAME = (new SimpleAttributeDefinitionBuilder(JMX_ON_ATTRIBUTE, ModelType.STRING))

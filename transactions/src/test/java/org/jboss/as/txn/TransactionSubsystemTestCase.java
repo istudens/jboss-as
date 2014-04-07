@@ -36,6 +36,7 @@ import static org.jboss.as.txn.subsystem.TransactionSubsystemRootResourceDefinit
 import static org.jboss.as.txn.subsystem.TransactionSubsystemRootResourceDefinition.NODE_IDENTIFIER;
 import static org.jboss.as.txn.subsystem.TransactionSubsystemRootResourceDefinition.OBJECT_STORE_PATH;
 import static org.jboss.as.txn.subsystem.TransactionSubsystemRootResourceDefinition.OBJECT_STORE_RELATIVE_TO;
+import static org.jboss.as.txn.subsystem.TransactionSubsystemRootResourceDefinition.OBJECT_STORE_TYPE;
 import static org.jboss.as.txn.subsystem.TransactionSubsystemRootResourceDefinition.PATH;
 import static org.jboss.as.txn.subsystem.TransactionSubsystemRootResourceDefinition.PROCESS_ID_SOCKET_BINDING;
 import static org.jboss.as.txn.subsystem.TransactionSubsystemRootResourceDefinition.PROCESS_ID_SOCKET_MAX_PORTS;
@@ -248,7 +249,8 @@ public class TransactionSubsystemTestCase extends AbstractSubsystemBaseTest {
                                 PROCESS_ID_SOCKET_BINDING,
                                 PROCESS_ID_SOCKET_MAX_PORTS,
                                 OBJECT_STORE_PATH,
-                                OBJECT_STORE_RELATIVE_TO
+                                OBJECT_STORE_RELATIVE_TO,
+                                OBJECT_STORE_TYPE
                                 ),
                         new ChangeToTrueConfig(HORNETQ_STORE_ENABLE_ASYNC_IO)
                 }) ,
@@ -266,6 +268,7 @@ public class TransactionSubsystemTestCase extends AbstractSubsystemBaseTest {
                         PROCESS_ID_SOCKET_MAX_PORTS,
                         OBJECT_STORE_PATH,
                         OBJECT_STORE_RELATIVE_TO,
+                        OBJECT_STORE_TYPE,
                         HORNETQ_STORE_ENABLE_ASYNC_IO));
     }
 

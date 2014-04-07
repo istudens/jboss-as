@@ -38,6 +38,7 @@ import org.jboss.as.controller.SimpleResourceDefinition;
 import org.jboss.as.controller.access.management.SensitiveTargetAccessConstraintDefinition;
 import org.jboss.as.controller.client.helpers.MeasurementUnit;
 import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
+import org.jboss.as.controller.operations.validation.EnumValidator;
 import org.jboss.as.controller.operations.validation.IntRangeValidator;
 import org.jboss.as.controller.operations.validation.StringBytesLengthValidator;
 import org.jboss.as.controller.operations.validation.StringLengthValidator;
@@ -175,19 +176,24 @@ public class TransactionSubsystemRootResourceDefinition extends SimpleResourceDe
             .setDefaultValue(new ModelNode().set(false))
             .setFlags(AttributeAccess.Flag.RESTART_JVM)
             .setAlternatives(CommonAttributes.USE_JDBC_STORE)
-            .setAllowExpression(false).build();
+            .setAllowExpression(false)
+            .setDeprecated(ModelVersion.create(2, 1, 0))
+            .build();
     public static final SimpleAttributeDefinition HORNETQ_STORE_ENABLE_ASYNC_IO = new SimpleAttributeDefinitionBuilder(CommonAttributes.HORNETQ_STORE_ENABLE_ASYNC_IO, ModelType.BOOLEAN, true)
             .setDefaultValue(new ModelNode().set(false))
             .setFlags(AttributeAccess.Flag.RESTART_JVM)
             .setXmlName(Attribute.ENABLE_ASYNC_IO.getLocalName())
             .setAllowExpression(true)
-            .setRequires(CommonAttributes.USEHORNETQSTORE).build();
+            .setRequires(CommonAttributes.USEHORNETQSTORE)
+            .build();
 
     public static final SimpleAttributeDefinition USE_JDBC_STORE = new SimpleAttributeDefinitionBuilder(CommonAttributes.USE_JDBC_STORE, ModelType.BOOLEAN, true)
                 .setDefaultValue(new ModelNode(false))
                 .setFlags(AttributeAccess.Flag.RESTART_JVM)
                 .setAlternatives(CommonAttributes.USEHORNETQSTORE)
-                .setAllowExpression(false).build();
+                .setAllowExpression(false)
+                .setDeprecated(ModelVersion.create(2, 1, 0))
+                .build();
     public static final SimpleAttributeDefinition JDBC_STORE_DATASOURCE = new SimpleAttributeDefinitionBuilder(CommonAttributes.JDBC_STORE_DATASOURCE, ModelType.STRING, true)
                 .setFlags(AttributeAccess.Flag.RESTART_JVM)
                 .setXmlName(Attribute.DATASOURCE_JNDI_NAME.getLocalName())
@@ -198,7 +204,8 @@ public class TransactionSubsystemRootResourceDefinition extends SimpleResourceDe
             .setFlags(AttributeAccess.Flag.RESTART_JVM)
             .setXmlName(Attribute.TABLE_PREFIX.getLocalName())
             .setAllowExpression(true)
-            .setRequires(CommonAttributes.USE_JDBC_STORE).build();
+            .setRequires(CommonAttributes.USE_JDBC_STORE)
+            .build();
     public static final SimpleAttributeDefinition JDBC_ACTION_STORE_DROP_TABLE = new SimpleAttributeDefinitionBuilder(CommonAttributes.JDBC_ACTION_STORE_DROP_TABLE, ModelType.BOOLEAN, true)
             .setDefaultValue(new ModelNode(false))
             .setFlags(AttributeAccess.Flag.RESTART_JVM)
@@ -228,6 +235,14 @@ public class TransactionSubsystemRootResourceDefinition extends SimpleResourceDe
             .setAllowExpression(true)
             .setRequires(CommonAttributes.USE_JDBC_STORE).build();
 
+    public static final SimpleAttributeDefinition OBJECT_STORE_TYPE = new SimpleAttributeDefinitionBuilder(CommonAttributes.OBJECT_STORE_TYPE, ModelType.STRING, true)
+            .setXmlName(Attribute.TYPE.getLocalName())
+            .setFlags(AttributeAccess.Flag.RESTART_JVM)
+            .setAllowExpression(true)
+            .setValidator(new EnumValidator<ObjectStoreType>(ObjectStoreType.class, true, true))
+            .setDefaultValue(new ModelNode(ObjectStoreType.DEFAULT.toString()))
+            .build();
+
 
     private final boolean registerRuntimeOnly;
 
@@ -246,7 +261,7 @@ public class TransactionSubsystemRootResourceDefinition extends SimpleResourceDe
             OBJECT_STORE_RELATIVE_TO, OBJECT_STORE_PATH, JTS, USEHORNETQSTORE, USE_JDBC_STORE, JDBC_STORE_DATASOURCE,
             JDBC_ACTION_STORE_DROP_TABLE, JDBC_ACTION_STORE_TABLE_PREFIX, JDBC_COMMUNICATION_STORE_DROP_TABLE,
             JDBC_COMMUNICATION_STORE_TABLE_PREFIX, JDBC_STATE_STORE_DROP_TABLE, JDBC_STATE_STORE_TABLE_PREFIX,
-            HORNETQ_STORE_ENABLE_ASYNC_IO
+            HORNETQ_STORE_ENABLE_ASYNC_IO, OBJECT_STORE_TYPE
     };
 
     static final AttributeDefinition[] ATTRIBUTES_WITH_EXPRESSIONS_AFTER_1_1_0 = new AttributeDefinition[] {
@@ -264,21 +279,25 @@ public class TransactionSubsystemRootResourceDefinition extends SimpleResourceDe
                 JDBC_STATE_STORE_DROP_TABLE, JDBC_STATE_STORE_TABLE_PREFIX
     };
 
+    static final AttributeDefinition[] objectStoreDeprecatedAttributes = new AttributeDefinition[] {
+            USEHORNETQSTORE, USE_JDBC_STORE
+    };
+
     @Override
     public void registerAttributes(ManagementResourceRegistration resourceRegistration) {
         // Register all attributes except of the mutual ones
-        Set<AttributeDefinition> attributesWithoutMutuals = new HashSet<>(Arrays.asList(attributes));
-        attributesWithoutMutuals.remove(USEHORNETQSTORE);
-        attributesWithoutMutuals.remove(USE_JDBC_STORE);
-        OperationStepHandler writeHandler = new ReloadRequiredWriteAttributeHandler(attributesWithoutMutuals);
-        for(final AttributeDefinition def : attributesWithoutMutuals) {
+        Set<AttributeDefinition> attributesWithoutObjectStore = new HashSet<>(Arrays.asList(attributes));
+        attributesWithoutObjectStore.removeAll(Arrays.asList(objectStoreDeprecatedAttributes));
+        OperationStepHandler writeHandler = new ReloadRequiredWriteAttributeHandler(attributesWithoutObjectStore);
+        for(final AttributeDefinition def : attributesWithoutObjectStore) {
             resourceRegistration.registerReadWriteAttribute(def, null, writeHandler);
         }
 
-        // Register mutual object store attributes
-        OperationStepHandler mutualWriteHandler = new ObjectStoreMutualWriteHandler(USEHORNETQSTORE, USE_JDBC_STORE);
-        resourceRegistration.registerReadWriteAttribute(USEHORNETQSTORE, null, mutualWriteHandler);
-        resourceRegistration.registerReadWriteAttribute(USE_JDBC_STORE, null, mutualWriteHandler);
+        // Register object store attributes
+        OperationStepHandler deprecatedObjectStoreWriteHandler = new DeprecatedObjectStoreWriteHandler(objectStoreDeprecatedAttributes);
+        for(final AttributeDefinition def : objectStoreDeprecatedAttributes) {
+            resourceRegistration.registerReadWriteAttribute(def, null, deprecatedObjectStoreWriteHandler);
+        }
 
         EnableStatisticsHandler esh = new EnableStatisticsHandler();
         resourceRegistration.registerReadWriteAttribute(ENABLE_STATISTICS, esh, esh);
@@ -309,8 +328,8 @@ public class TransactionSubsystemRootResourceDefinition extends SimpleResourceDe
         }
     }
 
-    private static class ObjectStoreMutualWriteHandler extends ReloadRequiredWriteAttributeHandler {
-        public ObjectStoreMutualWriteHandler(final AttributeDefinition... definitions) {
+    private static class DeprecatedObjectStoreWriteHandler extends ReloadRequiredWriteAttributeHandler {
+        public DeprecatedObjectStoreWriteHandler(final AttributeDefinition... definitions) {
             super(definitions);
         }
 
@@ -319,19 +338,12 @@ public class TransactionSubsystemRootResourceDefinition extends SimpleResourceDe
                                         ModelNode newValue, ModelNode oldValue, final Resource model) throws OperationFailedException {
             super.finishModelStage(context, operation, attributeName, newValue, oldValue, model);
 
-            assert !USEHORNETQSTORE.isAllowExpression() && !USE_JDBC_STORE.isAllowExpression() : "rework this before enabling expression";
-
-            if (attributeName.equals(USEHORNETQSTORE.getName()) || attributeName.equals(USE_JDBC_STORE.getName())) {
-                if (newValue.asBoolean() == true) {
-                    // check the value of the mutual attribute and disable it if it is set to true
-                    final String mutualAttributeName = attributeName.equals(USE_JDBC_STORE.getName())
-                            ? USEHORNETQSTORE.getName()
-                            : USE_JDBC_STORE.getName();
-
-                    ModelNode resourceModel = model.getModel();
-                    if (resourceModel.hasDefined(mutualAttributeName) && resourceModel.get(mutualAttributeName).asBoolean()) {
-                        resourceModel.get(mutualAttributeName).set(new ModelNode(false));
-                    }
+            if (newValue.asBoolean() == true) {
+                ModelNode resourceModel = model.getModel();
+                if (attributeName.equals(USEHORNETQSTORE.getName())) {
+                    resourceModel.get(OBJECT_STORE_TYPE.getName()).set(new ModelNode(ObjectStoreType.HORNETQ.toString()));
+                } else if (attributeName.equals(USE_JDBC_STORE.getName())) {
+                    resourceModel.get(OBJECT_STORE_TYPE.getName()).set(new ModelNode(ObjectStoreType.JDBC.toString()));
                 }
             }
         }

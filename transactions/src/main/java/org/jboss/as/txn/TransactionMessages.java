@@ -109,4 +109,7 @@ public interface TransactionMessages {
 
     @Message(id = 10108, value = "Attributes %s and %s are alternatives; both cannot be set with conflicting values.")
     OperationFailedException inconsistentStatisticsSettings(String attrOne, String attrTwo);
+
+    @Message(id = 10109, value = "'object-store-type' must be without an expression.")
+    String objectStoreTypeMustBeWithoutExpression();
 }

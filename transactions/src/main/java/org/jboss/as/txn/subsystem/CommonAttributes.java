@@ -39,6 +39,7 @@ interface CommonAttributes {
     String OBJECT_STORE = "object-store";
     String OBJECT_STORE_PATH = "object-store-path";
     String OBJECT_STORE_RELATIVE_TO = "object-store-relative-to";
+    String OBJECT_STORE_TYPE = "object-store-type";
 
     String JTS = "jts";
     String USEHORNETQSTORE = "use-hornetq-store";

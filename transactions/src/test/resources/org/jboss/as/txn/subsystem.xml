@@ -1,4 +1,4 @@
-<subsystem xmlns="urn:jboss:domain:transactions:2.0">
+<subsystem xmlns="urn:jboss:domain:transactions:2.1">
     <core-environment>
         <process-id>
             <uuid/>
@@ -6,7 +6,6 @@
     </core-environment>
     <recovery-environment socket-binding="txn-recovery-environment" status-socket-binding="txn-status-manager"/>
     <coordinator-environment default-timeout="300"/>
-    <object-store path="tx-object-store"/>
+    <object-store type="hornetq" path="tx-object-store"/>
     <jts/>
-    <use-hornetq-store/>
 </subsystem>

@@ -89,10 +89,12 @@ class TransactionSubsystemXMLPersister implements XMLElementWriter<SubsystemMars
         }
 
         if (TransactionSubsystemRootResourceDefinition.OBJECT_STORE_RELATIVE_TO.isMarshallable(node)
-                || TransactionSubsystemRootResourceDefinition.OBJECT_STORE_PATH.isMarshallable(node)) {
+                || TransactionSubsystemRootResourceDefinition.OBJECT_STORE_PATH.isMarshallable(node)
+                || TransactionSubsystemRootResourceDefinition.OBJECT_STORE_TYPE.isMarshallable(node)) {
             writer.writeStartElement(Element.OBJECT_STORE.getLocalName());
             TransactionSubsystemRootResourceDefinition.OBJECT_STORE_PATH.marshallAsAttribute(node, writer);
             TransactionSubsystemRootResourceDefinition.OBJECT_STORE_RELATIVE_TO.marshallAsAttribute(node, writer);
+            TransactionSubsystemRootResourceDefinition.OBJECT_STORE_TYPE.marshallAsAttribute(node, writer);
             writer.writeEndElement();
         }
 
@@ -101,13 +103,19 @@ class TransactionSubsystemXMLPersister implements XMLElementWriter<SubsystemMars
             writer.writeEndElement();
         }
 
-        if(node.hasDefined(CommonAttributes.USEHORNETQSTORE) && node.get(CommonAttributes.USEHORNETQSTORE).asBoolean()) {
-            writer.writeStartElement(Element.USEHORNETQSTORE.getLocalName());
+        if(TransactionSubsystemRootResourceDefinition.HORNETQ_STORE_ENABLE_ASYNC_IO.isMarshallable(node)) {
+            writer.writeStartElement(Element.HORNETQ_STORE.getLocalName());
             TransactionSubsystemRootResourceDefinition.HORNETQ_STORE_ENABLE_ASYNC_IO.marshallAsAttribute(node, writer);
             writer.writeEndElement();
         }
 
-        if (node.hasDefined(CommonAttributes.USE_JDBC_STORE) && node.get(CommonAttributes.USE_JDBC_STORE).asBoolean()) {
+        if (TransactionSubsystemRootResourceDefinition.JDBC_STORE_DATASOURCE.isMarshallable(node)
+                ||TransactionSubsystemRootResourceDefinition.JDBC_ACTION_STORE_TABLE_PREFIX.isMarshallable(node)
+                ||TransactionSubsystemRootResourceDefinition.JDBC_ACTION_STORE_DROP_TABLE.isMarshallable(node)
+                ||TransactionSubsystemRootResourceDefinition.JDBC_COMMUNICATION_STORE_TABLE_PREFIX.isMarshallable(node)
+                ||TransactionSubsystemRootResourceDefinition.JDBC_COMMUNICATION_STORE_DROP_TABLE.isMarshallable(node)
+                ||TransactionSubsystemRootResourceDefinition.JDBC_STATE_STORE_TABLE_PREFIX.isMarshallable(node)
+                ||TransactionSubsystemRootResourceDefinition.JDBC_STATE_STORE_DROP_TABLE.isMarshallable(node)) {
             writer.writeStartElement(Element.JDBC_STORE.getLocalName());
             TransactionSubsystemRootResourceDefinition.JDBC_STORE_DATASOURCE.marshallAsAttribute(node, writer);
             if (TransactionSubsystemRootResourceDefinition.JDBC_ACTION_STORE_TABLE_PREFIX.isMarshallable(node)
