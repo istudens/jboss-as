@@ -22,20 +22,27 @@
 package org.jboss.as.test.integration.jaxrs.validator;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.as.test.integration.common.HttpRequest;
+import org.jboss.logging.Logger;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -52,6 +59,7 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 @RunAsClient
 public class BeanValidationIntegrationTestCase {
+    Logger logger = Logger.getLogger(BeanValidationIntegrationTestCase.class);
 
     @ApplicationPath("/myjaxrs")
     public static class TestApplication extends Application {
@@ -66,7 +74,10 @@ public class BeanValidationIntegrationTestCase {
                 ValidatorModel.class,
                 ValidatorResource.class,
                 AnotherValidatorResource.class,
-                YetAnotherValidatorResource.class
+                YetAnotherValidatorResource.class,
+                NotBlankValidatorResource.class,
+                NotBlankValidatorResourceImpl.class,
+                NotBlankValidatorResourceWithoutInterface.class
             );
     }
 
@@ -129,4 +140,57 @@ public class BeanValidationIntegrationTestCase {
 
         Assert.assertEquals("Return value constraint violated", 500, result.getStatusLine().getStatusCode());
     }
+
+    @Test
+    public void testNotBlankValidRequest() throws Exception {
+        DefaultHttpClient client = new DefaultHttpClient(new PoolingClientConnectionManager());
+
+        HttpPost request = new HttpPost(url + "myjaxrs/validatenotblank");
+        List<NameValuePair> nvps = new ArrayList<NameValuePair>();
+        nvps.add(new BasicNameValuePair("id", " 5"));
+        request.setEntity(new UrlEncodedFormEntity(nvps));
+        HttpResponse result = client.execute(request);
+
+        Assert.assertEquals(200, result.getStatusLine().getStatusCode());
+        Assert.assertEquals("ValidatorModel{id=5}", EntityUtils.toString(result.getEntity()));
+    }
+
+    @Test
+    public void testNotBlankInvalidRequest() throws Exception {
+        DefaultHttpClient client = new DefaultHttpClient(new PoolingClientConnectionManager());
+
+        HttpPost request = new HttpPost(url + "myjaxrs/validatenotblank");
+        List<NameValuePair> nvps = new ArrayList<NameValuePair>();
+        nvps.add(new BasicNameValuePair("id", " "));
+        request.setEntity(new UrlEncodedFormEntity(nvps));
+        HttpResponse result = client.execute(request);
+        logger.info("result = " + result);
+        logger.info("result.getStatusLine().getReasonPhrase() = " + result.getStatusLine().getReasonPhrase());
+//        logger.info("result.getHeaders(\"validation-exception\")[0] = " + result.getHeaders("validation-exception")[0]);
+
+//        Assert.assertEquals("Parameter constraint violated", 400, result.getStatusLine().getStatusCode());
+        Assert.assertNotNull(result.getHeaders("validation-exception"));
+        Assert.assertEquals(1, result.getHeaders("validation-exception").length);
+        Assert.assertEquals("true", result.getHeaders("validation-exception")[0].getValue());
+    }
+
+    @Test
+    public void testNotBlankInvalidRequestWithoutInterface() throws Exception {
+        DefaultHttpClient client = new DefaultHttpClient(new PoolingClientConnectionManager());
+
+        HttpPost request = new HttpPost(url + "myjaxrs/validatenotblankwithoutinterface");
+        List<NameValuePair> nvps = new ArrayList<NameValuePair>();
+        nvps.add(new BasicNameValuePair("id", " "));
+        request.setEntity(new UrlEncodedFormEntity(nvps));
+        HttpResponse result = client.execute(request);
+        logger.info("result = " + result);
+        logger.info("result.getStatusLine().getReasonPhrase() = " + result.getStatusLine().getReasonPhrase());
+//        logger.info("result.getHeaders(\"validation-exception\")[0] = " + result.getHeaders("validation-exception")[0]);
+
+//        Assert.assertEquals("Parameter constraint violated", 400, result.getStatusLine().getStatusCode());
+        Assert.assertNotNull(result.getHeaders("validation-exception"));
+        Assert.assertEquals(1, result.getHeaders("validation-exception").length);
+        Assert.assertEquals("true", result.getHeaders("validation-exception")[0].getValue());
+    }
+
 }
