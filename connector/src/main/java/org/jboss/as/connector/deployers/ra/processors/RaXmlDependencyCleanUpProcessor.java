@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
+ * Copyright 2020, Red Hat, Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -23,24 +23,23 @@
 package org.jboss.as.connector.deployers.ra.processors;
 
 import org.jboss.as.connector.metadata.xmldescriptors.ConnectorXmlDescriptor;
-import org.jboss.as.connector.subsystems.resourceadapters.ModifiableResourceAdapter;
 import org.jboss.as.connector.subsystems.resourceadapters.ResourceAdaptersSubsystemService;
 import org.jboss.as.connector.util.CopyOnWriteArrayListMultiMap;
-import org.jboss.as.server.deployment.AttachmentKey;
 import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.msc.service.ServiceName;
 
-public class RaXmlDependencyProcessor implements DeploymentUnitProcessor {
+
+public class RaXmlDependencyCleanUpProcessor implements DeploymentUnitProcessor {
 
 
     /**
-     * Add dependencies for modules required for ra deployments
+     *
      *
      * @param phaseContext the deployment unit context
-     * @throws org.jboss.as.server.deployment.DeploymentUnitProcessingException
+     * @throws DeploymentUnitProcessingException
      */
     public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
 
@@ -59,8 +58,7 @@ public class RaXmlDependencyProcessor implements DeploymentUnitProcessor {
         if (resourceAdaptersMap != null && resourceAdaptersMap.get(deploymentUnitName) != null) {
             for (ServiceName serviceName : resourceAdaptersMap.get(deploymentUnitName)) {
 
-                phaseContext.addDeploymentDependency(serviceName, AttachmentKey
-                        .create(ModifiableResourceAdapter.class));
+                phaseContext.getServiceTarget().removeDependency(serviceName);
             }
         }
      }

@@ -31,6 +31,7 @@ import org.jboss.as.connector.deployers.ra.processors.ParsedRaDeploymentProcesso
 import org.jboss.as.connector.deployers.ra.processors.RaDeploymentParsingProcessor;
 import org.jboss.as.connector.deployers.ra.processors.RaNativeProcessor;
 import org.jboss.as.connector.deployers.ra.processors.RaStructureProcessor;
+import org.jboss.as.connector.deployers.ra.processors.RaXmlDependencyCleanUpProcessor;
 import org.jboss.as.connector.deployers.ra.processors.RaXmlDependencyProcessor;
 import org.jboss.as.connector.deployers.ra.processors.RaXmlDeploymentProcessor;
 import org.jboss.as.connector.deployers.ra.processors.RarDependencyProcessor;
@@ -114,5 +115,6 @@ public class RaDeploymentActivator {
         updateContext.addDeploymentProcessor(ResourceAdaptersExtension.SUBSYSTEM_NAME, Phase.INSTALL, Phase.INSTALL_RA_DEPLOYMENT, new ParsedRaDeploymentProcessor());
         updateContext.addDeploymentProcessor(ResourceAdaptersExtension.SUBSYSTEM_NAME, Phase.INSTALL, Phase.INSTALL_RA_XML_DEPLOYMENT, new RaXmlDeploymentProcessor());
         updateContext.addDeploymentProcessor(ResourceAdaptersExtension.SUBSYSTEM_NAME, Phase.INSTALL, Phase.INSTALL_JDBC_DRIVER, new DriverProcessor());
+        updateContext.addDeploymentProcessor(ResourceAdaptersExtension.SUBSYSTEM_NAME, Phase.CLEANUP, Phase.CLEANUP_RAR_SERVICES_DEPS, new RaXmlDependencyCleanUpProcessor());
     }
 }
